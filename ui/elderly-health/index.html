@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareWatch — Elderly Health Monitor</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js for vitals charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Lucide icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP SHELL
+═══════════════════════════════════════════════════════════ -->
+<div class="app-shell">
+
+  <!-- ── SIDEBAR NAV ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="13" stroke="#32B8C6" stroke-width="2"/>
+          <path d="M7 14 Q10 8 14 14 Q18 20 21 14" stroke="#32B8C6" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <circle cx="14" cy="14" r="2" fill="#32B8C6"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">CareWatch</span>
+        <span class="brand-sub">Family Health Monitor</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="dashboard">
+        <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-view="vitals">
+        <i data-lucide="activity"></i><span>Vitals</span>
+      </button>
+      <button class="nav-item" data-view="activity">
+        <i data-lucide="footprints"></i><span>Activity</span>
+      </button>
+      <button class="nav-item" data-view="location">
+        <i data-lucide="map-pin"></i><span>Location</span>
+      </button>
+      <button class="nav-item" data-view="alerts">
+        <i data-lucide="bell"></i><span>Alerts</span>
+        <span class="nav-badge" id="alert-count">3</span>
+      </button>
+      <button class="nav-item" data-view="family">
+        <i data-lucide="users"></i><span>Family</span>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <i data-lucide="settings"></i><span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-parent-card">
+      <div class="parent-avatar">
+        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=grandma&backgroundColor=1A2233" alt="Parent avatar" />
+        <span class="parent-status-dot status-online"></span>
+      </div>
+      <div class="parent-info">
+        <span class="parent-name">Margaret Chen</span>
+        <span class="parent-age">82 years old</span>
+        <span class="parent-location-label">📍 Home — Living Room</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="topbar-menu-btn" id="sidebar-toggle">
+        <i data-lucide="menu"></i>
+      </button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="topbar-time" id="live-clock">--:--</div>
+        <div class="connection-pill connected" id="connection-status">
+          <span class="pulse-dot"></span>
+          <span>Live</span>
+        </div>
+        <button class="topbar-sos" id="sos-btn" title="Emergency Call">
+          <i data-lucide="phone-call"></i>
+          <span>SOS</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ════════════════════════════
+         DASHBOARD VIEW
+    ════════════════════════════ -->
+    <section class="view active" id="view-dashboard">
+      <div class="view-header">
+        <h1>Good <span id="time-greeting">morning</span>, <span id="user-name">Sarah</span> 👋</h1>
+        <p class="view-subtitle">Your mother is <strong class="status-text-ok">doing well</strong> today.</p>
+      </div>
+
+      <!-- Status hero card -->
+      <div class="hero-status-card">
+        <div class="hero-status-left">
+          <div class="hs-avatar">
+            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=grandma&backgroundColor=1A2233" alt="Margaret" />
+          </div>
+          <div class="hs-info">
+            <div class="hs-name">Margaret Chen</div>
+            <div class="hs-detail">Last seen: <span id="last-seen">2 min ago</span> · <span id="hero-location">Living Room</span></div>
+            <div class="hs-tags">
+              <span class="hs-tag ok">
+                <i data-lucide="shield-check"></i> Normal
+              </span>
+              <span class="hs-tag warn" id="hero-fall-tag" style="display:none">
+                <i data-lucide="alert-triangle"></i> Fall Risk
+              </span>
+              <span class="hs-tag info">
+                <i data-lucide="wifi"></i> WiFi CSI Active
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-status-right">
+          <div class="hs-score-ring">
+            <svg viewBox="0 0 80 80" width="100" height="100">
+              <circle cx="40" cy="40" r="34" stroke="#1E293B" stroke-width="8" fill="none"/>
+              <circle cx="40" cy="40" r="34" stroke="#32B8C6" stroke-width="8" fill="none"
+                      stroke-dasharray="213" stroke-dashoffset="32"
+                      stroke-linecap="round" transform="rotate(-90 40 40)"
+                      class="score-ring-arc"/>
+            </svg>
+            <div class="hs-score-value">
+              <span id="health-score">85</span>
+              <small>/100</small>
+            </div>
+          </div>
+          <span class="hs-score-label">Health Score</span>
+        </div>
+      </div>
+
+      <!-- Quick vital metrics -->
+      <div class="quick-metrics-grid">
+        <div class="metric-card" data-vital="heart">
+          <div class="mc-icon heart">
+            <i data-lucide="heart-pulse"></i>
+          </div>
+          <div class="mc-body">
+            <span class="mc-label">Heart Rate</span>
+            <span class="mc-value"><span id="d-hr">72</span> <small>bpm</small></span>
+            <span class="mc-trend ok">↑ Normal range</span>
+          </div>
+          <div class="mc-sparkline-wrap">
+            <canvas id="spark-hr" width="80" height="36"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-card" data-vital="spo2">
+          <div class="mc-icon spo2">
+            <i data-lucide="droplets"></i>
+          </div>
+          <div class="mc-body">
+            <span class="mc-label">SpO₂</span>
+            <span class="mc-value"><span id="d-spo2">97</span><small>%</small></span>
+            <span class="mc-trend ok">Normal</span>
+          </div>
+          <div class="mc-sparkline-wrap">
+            <canvas id="spark-spo2" width="80" height="36"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-card" data-vital="breath">
+          <div class="mc-icon breath">
+            <i data-lucide="wind"></i>
+          </div>
+          <div class="mc-body">
+            <span class="mc-label">Breathing</span>
+            <span class="mc-value"><span id="d-breath">16</span> <small>/min</small></span>
+            <span class="mc-trend ok">Regular</span>
+          </div>
+          <div class="mc-sparkline-wrap">
+            <canvas id="spark-breath" width="80" height="36"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-card" data-vital="temp">
+          <div class="mc-icon temp">
+            <i data-lucide="thermometer"></i>
+          </div>
+          <div class="mc-body">
+            <span class="mc-label">Temperature</span>
+            <span class="mc-value"><span id="d-temp">36.6</span><small>°C</small></span>
+            <span class="mc-trend ok">Normal</span>
+          </div>
+          <div class="mc-sparkline-wrap">
+            <canvas id="spark-temp" width="80" height="36"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-card" data-vital="bp">
+          <div class="mc-icon bp">
+            <i data-lucide="gauge"></i>
+          </div>
+          <div class="mc-body">
+            <span class="mc-label">Blood Pressure</span>
+            <span class="mc-value"><span id="d-bp">122/78</span> <small>mmHg</small></span>
+            <span class="mc-trend warn">Slightly elevated</span>
+          </div>
+          <div class="mc-sparkline-wrap">
+            <canvas id="spark-bp" width="80" height="36"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-card" data-vital="sleep">
+          <div class="mc-icon sleep">
+            <i data-lucide="moon"></i>
+          </div>
+          <div class="mc-body">
+            <span class="mc-label">Sleep Last Night</span>
+            <span class="mc-value"><span id="d-sleep">7.2</span> <small>hrs</small></span>
+            <span class="mc-trend ok">Good quality</span>
+          </div>
+          <div class="mc-sparkline-wrap">
+            <canvas id="spark-sleep" width="80" height="36"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom row: alerts + activity summary -->
+      <div class="dash-bottom-row">
+        <!-- Recent Alerts -->
+        <div class="panel recent-alerts-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="bell"></i> Recent Alerts</span>
+            <button class="panel-link" data-goto="alerts">View all</button>
+          </div>
+          <div class="alert-list" id="recent-alert-list">
+            <!-- injected by JS -->
+          </div>
+        </div>
+
+        <!-- Today's Activity -->
+        <div class="panel activity-summary-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="zap"></i> Today's Activity</span>
+            <button class="panel-link" data-goto="activity">Details</button>
+          </div>
+          <div class="activity-rings">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 60 60" width="72" height="72">
+                <circle cx="30" cy="30" r="24" stroke="#1E293B" stroke-width="7" fill="none"/>
+                <circle cx="30" cy="30" r="24" stroke="#32B8C6" stroke-width="7" fill="none"
+                        stroke-dasharray="150.8" stroke-dashoffset="48"
+                        stroke-linecap="round" transform="rotate(-90 30 30)" id="steps-ring"/>
+              </svg>
+              <div class="ring-label"><span id="steps-count">3,240</span><small>steps</small></div>
+            </div>
+            <div class="ring-wrap">
+              <svg viewBox="0 0 60 60" width="72" height="72">
+                <circle cx="30" cy="30" r="24" stroke="#1E293B" stroke-width="7" fill="none"/>
+                <circle cx="30" cy="30" r="24" stroke="#2ED573" stroke-width="7" fill="none"
+                        stroke-dasharray="150.8" stroke-dashoffset="75"
+                        stroke-linecap="round" transform="rotate(-90 30 30)" id="active-ring"/>
+              </svg>
+              <div class="ring-label"><span id="active-mins">42</span><small>active min</small></div>
+            </div>
+            <div class="ring-wrap">
+              <svg viewBox="0 0 60 60" width="72" height="72">
+                <circle cx="30" cy="30" r="24" stroke="#1E293B" stroke-width="7" fill="none"/>
+                <circle cx="30" cy="30" r="24" stroke="#FFA502" stroke-width="7" fill="none"
+                        stroke-dasharray="150.8" stroke-dashoffset="100"
+                        stroke-linecap="round" transform="rotate(-90 30 30)" id="standing-ring"/>
+              </svg>
+              <div class="ring-label"><span id="standing-hrs">5</span><small>standing hrs</small></div>
+            </div>
+          </div>
+          <div class="activity-detail-row">
+            <div class="ad-item"><i data-lucide="footprints"></i><span>No falls detected today</span></div>
+            <div class="ad-item"><i data-lucide="utensils"></i><span>3 meals detected</span></div>
+            <div class="ad-item"><i data-lucide="droplet"></i><span>Hydration: moderate</span></div>
+          </div>
+        </div>
+
+        <!-- Medication Reminder -->
+        <div class="panel meds-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="pill"></i> Medications</span>
+          </div>
+          <div class="med-list">
+            <div class="med-item taken">
+              <div class="med-icon-wrap taken"><i data-lucide="check-circle-2"></i></div>
+              <div class="med-info">
+                <span class="med-name">Amlodipine 5mg</span>
+                <span class="med-time">08:00 AM · Taken ✓</span>
+              </div>
+            </div>
+            <div class="med-item taken">
+              <div class="med-icon-wrap taken"><i data-lucide="check-circle-2"></i></div>
+              <div class="med-info">
+                <span class="med-name">Metformin 500mg</span>
+                <span class="med-time">08:00 AM · Taken ✓</span>
+              </div>
+            </div>
+            <div class="med-item pending">
+              <div class="med-icon-wrap pending"><i data-lucide="clock"></i></div>
+              <div class="med-info">
+                <span class="med-name">Vitamin D3 1000IU</span>
+                <span class="med-time">12:00 PM · Due soon</span>
+              </div>
+            </div>
+            <div class="med-item upcoming">
+              <div class="med-icon-wrap upcoming"><i data-lucide="circle"></i></div>
+              <div class="med-info">
+                <span class="med-name">Aspirin 75mg</span>
+                <span class="med-time">08:00 PM · Upcoming</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════
+         VITALS VIEW
+    ════════════════════════════ -->
+    <section class="view" id="view-vitals">
+      <div class="view-header">
+        <h1>Vital Signs</h1>
+        <p class="view-subtitle">Continuous monitoring via WiFi CSI technology</p>
+      </div>
+
+      <div class="vitals-time-nav">
+        <button class="time-btn active" data-range="live">Live</button>
+        <button class="time-btn" data-range="1h">1H</button>
+        <button class="time-btn" data-range="24h">24H</button>
+        <button class="time-btn" data-range="7d">7 Days</button>
+        <button class="time-btn" data-range="30d">30 Days</button>
+      </div>
+
+      <!-- Heart Rate + SpO2 -->
+      <div class="vitals-dual-row">
+        <div class="vital-chart-panel">
+          <div class="vcp-header">
+            <div class="vcp-icon-title">
+              <div class="vcp-icon heart"><i data-lucide="heart-pulse"></i></div>
+              <div>
+                <span class="vcp-title">Heart Rate</span>
+                <span class="vcp-sub">beats per minute</span>
+              </div>
+            </div>
+            <div class="vcp-live-val">
+              <span class="vcp-number" id="vhr-val">72</span>
+              <span class="vcp-unit">bpm</span>
+              <span class="vcp-status ok">Normal</span>
+            </div>
+          </div>
+          <div class="range-bars">
+            <span class="range-label">40</span>
+            <div class="range-track">
+              <div class="range-zone low" style="width:20%"></div>
+              <div class="range-zone ok" style="width:50%"></div>
+              <div class="range-zone warn" style="width:20%"></div>
+              <div class="range-zone danger" style="width:10%"></div>
+              <div class="range-marker" id="hr-marker" style="left:40%"></div>
+            </div>
+            <span class="range-label">200</span>
+          </div>
+          <canvas id="chart-hr" height="110"></canvas>
+          <div class="vcp-stats-row">
+            <div class="vcp-stat"><span>Min</span><strong id="hr-min">58</strong></div>
+            <div class="vcp-stat"><span>Avg</span><strong id="hr-avg">71</strong></div>
+            <div class="vcp-stat"><span>Max</span><strong id="hr-max">89</strong></div>
+            <div class="vcp-stat"><span>Resting</span><strong>65</strong></div>
+          </div>
+        </div>
+
+        <div class="vital-chart-panel">
+          <div class="vcp-header">
+            <div class="vcp-icon-title">
+              <div class="vcp-icon spo2"><i data-lucide="droplets"></i></div>
+              <div>
+                <span class="vcp-title">Blood Oxygen (SpO₂)</span>
+                <span class="vcp-sub">oxygen saturation</span>
+              </div>
+            </div>
+            <div class="vcp-live-val">
+              <span class="vcp-number" id="vspo2-val">97</span>
+              <span class="vcp-unit">%</span>
+              <span class="vcp-status ok">Normal</span>
+            </div>
+          </div>
+          <div class="range-bars">
+            <span class="range-label">85</span>
+            <div class="range-track">
+              <div class="range-zone danger" style="width:10%"></div>
+              <div class="range-zone warn" style="width:20%"></div>
+              <div class="range-zone ok" style="width:70%"></div>
+              <div class="range-marker" id="spo2-marker" style="left:88%"></div>
+            </div>
+            <span class="range-label">100</span>
+          </div>
+          <canvas id="chart-spo2" height="110"></canvas>
+          <div class="vcp-stats-row">
+            <div class="vcp-stat"><span>Min</span><strong id="spo2-min">95</strong></div>
+            <div class="vcp-stat"><span>Avg</span><strong id="spo2-avg">97</strong></div>
+            <div class="vcp-stat"><span>Max</span><strong id="spo2-max">99</strong></div>
+            <div class="vcp-stat"><span>Threshold</span><strong>≥94%</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Breathing + Blood Pressure -->
+      <div class="vitals-dual-row">
+        <div class="vital-chart-panel">
+          <div class="vcp-header">
+            <div class="vcp-icon-title">
+              <div class="vcp-icon breath"><i data-lucide="wind"></i></div>
+              <div>
+                <span class="vcp-title">Breathing Rate</span>
+                <span class="vcp-sub">respirations / minute</span>
+              </div>
+            </div>
+            <div class="vcp-live-val">
+              <span class="vcp-number" id="vbreath-val">16</span>
+              <span class="vcp-unit">/min</span>
+              <span class="vcp-status ok">Regular</span>
+            </div>
+          </div>
+          <canvas id="chart-breath" height="130"></canvas>
+          <div class="vcp-stats-row">
+            <div class="vcp-stat"><span>Min</span><strong>12</strong></div>
+            <div class="vcp-stat"><span>Avg</span><strong>16</strong></div>
+            <div class="vcp-stat"><span>Max</span><strong>22</strong></div>
+            <div class="vcp-stat"><span>Alert if</span><strong>&lt;10 or &gt;25</strong></div>
+          </div>
+        </div>
+
+        <div class="vital-chart-panel">
+          <div class="vcp-header">
+            <div class="vcp-icon-title">
+              <div class="vcp-icon bp"><i data-lucide="gauge"></i></div>
+              <div>
+                <span class="vcp-title">Blood Pressure</span>
+                <span class="vcp-sub">systolic / diastolic</span>
+              </div>
+            </div>
+            <div class="vcp-live-val">
+              <span class="vcp-number" style="font-size:1.5rem" id="vbp-val">122/78</span>
+              <span class="vcp-unit">mmHg</span>
+              <span class="vcp-status warn">Slight High</span>
+            </div>
+          </div>
+          <canvas id="chart-bp" height="130"></canvas>
+          <div class="vcp-stats-row">
+            <div class="vcp-stat"><span>Systolic Avg</span><strong>124</strong></div>
+            <div class="vcp-stat"><span>Diastolic Avg</span><strong>79</strong></div>
+            <div class="vcp-stat"><span>Pulse</span><strong>45</strong></div>
+            <div class="vcp-stat"><span>Target</span><strong>&lt;130/80</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Posture / WiFi Heatmap Preview -->
+      <div class="panel posture-panel">
+        <div class="panel-header">
+          <span class="panel-title"><i data-lucide="scan"></i> WiFi CSI Body Presence — Live Heatmap</span>
+          <span class="live-badge">LIVE</span>
+        </div>
+        <div class="posture-grid-wrap">
+          <div class="posture-room-grid" id="csi-heatmap">
+            <!-- Generated by JS -->
+          </div>
+          <div class="posture-legend">
+            <div class="legend-row"><div class="legend-swatch" style="background:#FF4757"></div><span>High signal disturbance</span></div>
+            <div class="legend-row"><div class="legend-swatch" style="background:#FFA502"></div><span>Medium presence</span></div>
+            <div class="legend-row"><div class="legend-swatch" style="background:#32B8C6"></div><span>Low presence</span></div>
+            <div class="legend-row"><div class="legend-swatch" style="background:#1E293B"></div><span>No signal</span></div>
+          </div>
+        </div>
+        <div class="posture-status-row">
+          <div class="pose-tag"><i data-lucide="user"></i> Sitting — armchair detected</div>
+          <div class="pose-tag"><i data-lucide="clock"></i> Stationary for 42 min</div>
+          <div class="pose-tag ok"><i data-lucide="check-circle"></i> Posture: upright</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════
+         ACTIVITY VIEW
+    ════════════════════════════ -->
+    <section class="view" id="view-activity">
+      <div class="view-header">
+        <h1>Daily Activity</h1>
+        <p class="view-subtitle">Movement, sleep, and fall detection</p>
+      </div>
+
+      <div class="activity-top-row">
+        <!-- Steps card -->
+        <div class="panel activity-stat-card">
+          <div class="asc-icon steps"><i data-lucide="footprints"></i></div>
+          <div class="asc-value" id="act-steps">3,240</div>
+          <div class="asc-label">Steps Today</div>
+          <div class="asc-goal">Goal: 5,000</div>
+          <div class="asc-progress-bar"><div class="asc-progress-fill steps" style="width:65%"></div></div>
+        </div>
+
+        <!-- Calories card -->
+        <div class="panel activity-stat-card">
+          <div class="asc-icon cals"><i data-lucide="flame"></i></div>
+          <div class="asc-value" id="act-cals">486</div>
+          <div class="asc-label">Calories Burned</div>
+          <div class="asc-goal">Goal: 800 kcal</div>
+          <div class="asc-progress-bar"><div class="asc-progress-fill cals" style="width:61%"></div></div>
+        </div>
+
+        <!-- Standing card -->
+        <div class="panel activity-stat-card">
+          <div class="asc-icon stand"><i data-lucide="person-standing"></i></div>
+          <div class="asc-value" id="act-stand">5 hrs</div>
+          <div class="asc-label">Standing Time</div>
+          <div class="asc-goal">Goal: 6 hours</div>
+          <div class="asc-progress-bar"><div class="asc-progress-fill stand" style="width:83%"></div></div>
+        </div>
+
+        <!-- Fall detection card -->
+        <div class="panel activity-stat-card fall-card">
+          <div class="asc-icon fall ok"><i data-lucide="shield-check"></i></div>
+          <div class="asc-value ok" id="act-falls">0</div>
+          <div class="asc-label">Falls Today</div>
+          <div class="asc-goal ok">No falls detected</div>
+          <div class="fall-history-row">
+            <span class="fall-hist-label">Last 7 days:</span>
+            <div class="fall-hist-dots" id="fall-hist">
+              <!-- injected by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity timeline -->
+      <div class="panel activity-timeline-panel">
+        <div class="panel-header">
+          <span class="panel-title"><i data-lucide="clock"></i> Today's Movement Timeline</span>
+        </div>
+        <div class="timeline-chart-wrap">
+          <canvas id="chart-activity-timeline" height="100"></canvas>
+        </div>
+        <div class="timeline-legend">
+          <div class="tl-item"><div class="tl-dot" style="background:#32B8C6"></div><span>Walking</span></div>
+          <div class="tl-item"><div class="tl-dot" style="background:#2ED573"></div><span>Sitting</span></div>
+          <div class="tl-item"><div class="tl-dot" style="background:#9B59B6"></div><span>Standing</span></div>
+          <div class="tl-item"><div class="tl-dot" style="background:#1A2233"></div><span>Sleeping / In bed</span></div>
+          <div class="tl-item"><div class="tl-dot" style="background:#FF4757"></div><span>Fall event</span></div>
+        </div>
+      </div>
+
+      <!-- Sleep analysis -->
+      <div class="sleep-dual-row">
+        <div class="panel sleep-chart-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="moon"></i> Sleep Analysis — Last Night</span>
+          </div>
+          <canvas id="chart-sleep" height="130"></canvas>
+          <div class="sleep-stats-row">
+            <div class="sleep-stat"><div class="sl-dot deep"></div><span>Deep: 1h 42m</span></div>
+            <div class="sleep-stat"><div class="sl-dot rem"></div><span>REM: 1h 28m</span></div>
+            <div class="sleep-stat"><div class="sl-dot light"></div><span>Light: 3h 12m</span></div>
+            <div class="sleep-stat"><div class="sl-dot awake"></div><span>Awake: 50m</span></div>
+          </div>
+        </div>
+
+        <div class="panel sleep-quality-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="bar-chart-2"></i> 7-Day Sleep Trend</span>
+          </div>
+          <canvas id="chart-sleep-week" height="130"></canvas>
+          <div class="sleep-avg-note">
+            Average: <strong>7.1 hrs</strong> · Recommended: 7–8 hrs for her age
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════
+         LOCATION VIEW
+    ════════════════════════════ -->
+    <section class="view" id="view-location">
+      <div class="view-header">
+        <h1>Location &amp; Zones</h1>
+        <p class="view-subtitle">Room-level presence via WiFi CSI — no cameras needed</p>
+      </div>
+
+      <div class="location-grid">
+        <!-- Floor plan -->
+        <div class="panel floor-plan-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="home"></i> Home Floor Plan</span>
+            <span class="live-badge">LIVE</span>
+          </div>
+          <div class="floor-plan" id="floor-plan">
+            <div class="room-box living active" id="room-living" style="left:5%;top:5%;width:40%;height:45%">
+              <span class="room-label">Living Room</span>
+              <div class="room-occupancy"><i data-lucide="user"></i> Present</div>
+              <div class="room-wifi-intensity" style="opacity:0.8"></div>
+            </div>
+            <div class="room-box kitchen" id="room-kitchen" style="left:50%;top:5%;width:45%;height:30%">
+              <span class="room-label">Kitchen</span>
+              <div class="room-occupancy empty">Empty</div>
+            </div>
+            <div class="room-box bedroom" id="room-bedroom" style="left:5%;top:55%;width:40%;height:40%">
+              <span class="room-label">Bedroom</span>
+              <div class="room-occupancy empty">Empty</div>
+            </div>
+            <div class="room-box bathroom" id="room-bathroom" style="left:50%;top:40%;width:25%;height:25%">
+              <span class="room-label">Bathroom</span>
+              <div class="room-occupancy empty">Empty</div>
+            </div>
+            <div class="room-box dining" id="room-dining" style="left:50%;top:70%;width:45%;height:25%">
+              <span class="room-label">Dining Room</span>
+              <div class="room-occupancy empty">Empty</div>
+            </div>
+            <!-- Person marker -->
+            <div class="person-marker" id="person-marker" style="left:18%;top:22%">
+              <div class="person-dot pulse-ring"></div>
+              <div class="person-label">Margaret</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location timeline & geofence -->
+        <div class="location-right-col">
+          <div class="panel location-trail-panel">
+            <div class="panel-header">
+              <span class="panel-title"><i data-lucide="map-pin-check-inside"></i> Room History Today</span>
+            </div>
+            <div class="location-trail" id="location-trail">
+              <!-- injected -->
+            </div>
+          </div>
+
+          <div class="panel geofence-panel">
+            <div class="panel-header">
+              <span class="panel-title"><i data-lucide="shield"></i> Safe Zone (Geofence)</span>
+            </div>
+            <div class="geofence-status ok" id="geofence-status">
+              <i data-lucide="shield-check"></i>
+              <span>Inside safe zone — <strong>Home</strong></span>
+            </div>
+            <div class="geofence-zones">
+              <div class="gz-item ok">
+                <div class="gz-icon"><i data-lucide="home"></i></div>
+                <div class="gz-info">
+                  <span>Home (primary)</span>
+                  <small>123 Maple Street, Springfield</small>
+                </div>
+                <span class="gz-badge inside">Inside</span>
+              </div>
+              <div class="gz-item">
+                <div class="gz-icon"><i data-lucide="building-2"></i></div>
+                <div class="gz-info">
+                  <span>Community Center</span>
+                  <small>1.2 km away</small>
+                </div>
+                <span class="gz-badge outside">Outside</span>
+              </div>
+              <div class="gz-item">
+                <div class="gz-icon"><i data-lucide="stethoscope"></i></div>
+                <div class="gz-info">
+                  <span>GP Clinic</span>
+                  <small>0.8 km away</small>
+                </div>
+                <span class="gz-badge outside">Outside</span>
+              </div>
+            </div>
+            <div class="geofence-note">
+              <i data-lucide="info"></i> Alert triggered if Margaret leaves home after 10 PM
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════
+         ALERTS VIEW
+    ════════════════════════════ -->
+    <section class="view" id="view-alerts">
+      <div class="view-header">
+        <h1>Alerts &amp; Notifications</h1>
+        <p class="view-subtitle">Health events and system notifications</p>
+      </div>
+
+      <div class="alerts-filter-row">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="critical">
+          <span class="dot danger"></span> Critical
+        </button>
+        <button class="filter-btn" data-filter="warning">
+          <span class="dot warn"></span> Warning
+        </button>
+        <button class="filter-btn" data-filter="info">
+          <span class="dot info"></span> Info
+        </button>
+        <button class="filter-btn" data-filter="resolved">
+          <span class="dot ok"></span> Resolved
+        </button>
+      </div>
+
+      <div class="alerts-full-list" id="alerts-full-list">
+        <!-- injected by JS -->
+      </div>
+    </section>
+
+    <!-- ════════════════════════════
+         FAMILY VIEW
+    ════════════════════════════ -->
+    <section class="view" id="view-family">
+      <div class="view-header">
+        <h1>Family Circle</h1>
+        <p class="view-subtitle">Shared access and emergency contacts</p>
+      </div>
+
+      <div class="family-grid">
+        <!-- Family members with access -->
+        <div class="panel family-members-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="users"></i> Family Members</span>
+            <button class="add-btn"><i data-lucide="user-plus"></i> Add</button>
+          </div>
+          <div class="family-member-list">
+            <div class="fm-item you">
+              <div class="fm-avatar">
+                <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=sarah&backgroundColor=1A2233" alt="Sarah" />
+              </div>
+              <div class="fm-info">
+                <span class="fm-name">Sarah Chen <span class="you-badge">You</span></span>
+                <span class="fm-role">Primary caregiver</span>
+                <span class="fm-perms">Full access · Alerts ON</span>
+              </div>
+              <div class="fm-actions">
+                <span class="fm-status online">Online</span>
+              </div>
+            </div>
+            <div class="fm-item">
+              <div class="fm-avatar">
+                <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=mike&backgroundColor=1A2233" alt="Michael" />
+              </div>
+              <div class="fm-info">
+                <span class="fm-name">Michael Chen</span>
+                <span class="fm-role">Son — secondary caregiver</span>
+                <span class="fm-perms">Vitals + Alerts · Alerts ON</span>
+              </div>
+              <div class="fm-actions">
+                <span class="fm-status offline">Offline</span>
+              </div>
+            </div>
+            <div class="fm-item">
+              <div class="fm-avatar">
+                <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=linda&backgroundColor=1A2233" alt="Linda" />
+              </div>
+              <div class="fm-info">
+                <span class="fm-name">Linda Park</span>
+                <span class="fm-role">Neighbor — emergency contact</span>
+                <span class="fm-perms">Emergency alerts only</span>
+              </div>
+              <div class="fm-actions">
+                <span class="fm-status online">Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emergency contacts -->
+        <div class="panel emergency-contacts-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="phone-call"></i> Emergency Contacts</span>
+            <button class="add-btn"><i data-lucide="plus"></i> Add</button>
+          </div>
+          <div class="ec-list">
+            <div class="ec-item">
+              <div class="ec-priority">1</div>
+              <div class="ec-info">
+                <span class="ec-name">Sarah Chen (You)</span>
+                <span class="ec-phone">+1 (555) 234-5678</span>
+              </div>
+              <div class="ec-actions">
+                <button class="ec-call-btn"><i data-lucide="phone"></i></button>
+              </div>
+            </div>
+            <div class="ec-item">
+              <div class="ec-priority">2</div>
+              <div class="ec-info">
+                <span class="ec-name">Michael Chen</span>
+                <span class="ec-phone">+1 (555) 345-6789</span>
+              </div>
+              <div class="ec-actions">
+                <button class="ec-call-btn"><i data-lucide="phone"></i></button>
+              </div>
+            </div>
+            <div class="ec-item emergency">
+              <div class="ec-priority emergency">!</div>
+              <div class="ec-info">
+                <span class="ec-name">Emergency Services</span>
+                <span class="ec-phone">911</span>
+              </div>
+              <div class="ec-actions">
+                <button class="ec-call-btn danger"><i data-lucide="phone-call"></i></button>
+              </div>
+            </div>
+            <div class="ec-item">
+              <div class="ec-priority">3</div>
+              <div class="ec-info">
+                <span class="ec-name">Dr. Rebecca Lau (GP)</span>
+                <span class="ec-phone">+1 (555) 456-7890</span>
+              </div>
+              <div class="ec-actions">
+                <button class="ec-call-btn"><i data-lucide="phone"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shared activity log -->
+        <div class="panel family-log-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="message-square"></i> Family Activity Log</span>
+          </div>
+          <div class="family-log" id="family-log">
+            <!-- injected -->
+          </div>
+          <div class="family-note-input">
+            <input type="text" id="note-input" placeholder="Leave a note for the family…" />
+            <button id="note-send-btn"><i data-lucide="send"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════
+         SETTINGS VIEW
+    ════════════════════════════ -->
+    <section class="view" id="view-settings">
+      <div class="view-header">
+        <h1>Settings</h1>
+        <p class="view-subtitle">Thresholds, notifications, and device configuration</p>
+      </div>
+
+      <div class="settings-grid">
+        <!-- Alert thresholds -->
+        <div class="panel settings-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="sliders-horizontal"></i> Alert Thresholds</span>
+          </div>
+          <div class="settings-form">
+            <div class="sf-group">
+              <label>Heart Rate — Low Alert <span class="sf-unit">bpm</span></label>
+              <div class="sf-slider-row">
+                <input type="range" min="40" max="70" value="50" class="sf-slider" id="hr-low-thresh"/>
+                <span class="sf-val" id="hr-low-val">50</span>
+              </div>
+            </div>
+            <div class="sf-group">
+              <label>Heart Rate — High Alert <span class="sf-unit">bpm</span></label>
+              <div class="sf-slider-row">
+                <input type="range" min="80" max="180" value="110" class="sf-slider" id="hr-high-thresh"/>
+                <span class="sf-val" id="hr-high-val">110</span>
+              </div>
+            </div>
+            <div class="sf-group">
+              <label>SpO₂ — Low Alert <span class="sf-unit">%</span></label>
+              <div class="sf-slider-row">
+                <input type="range" min="85" max="96" value="92" class="sf-slider" id="spo2-thresh"/>
+                <span class="sf-val" id="spo2-thresh-val">92</span>
+              </div>
+            </div>
+            <div class="sf-group">
+              <label>Inactivity Alert After <span class="sf-unit">minutes</span></label>
+              <div class="sf-slider-row">
+                <input type="range" min="30" max="240" value="90" class="sf-slider" id="inact-thresh"/>
+                <span class="sf-val" id="inact-thresh-val">90</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification settings -->
+        <div class="panel settings-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="bell-ring"></i> Notifications</span>
+          </div>
+          <div class="settings-form">
+            <div class="sf-toggle-row">
+              <div class="sf-toggle-info">
+                <span>Fall Detection Alert</span>
+                <small>Immediate push + SMS</small>
+              </div>
+              <label class="toggle on">
+                <input type="checkbox" checked/><span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="sf-toggle-row">
+              <div class="sf-toggle-info">
+                <span>Low SpO₂ Alert</span>
+                <small>Immediate push + SMS</small>
+              </div>
+              <label class="toggle on">
+                <input type="checkbox" checked/><span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="sf-toggle-row">
+              <div class="sf-toggle-info">
+                <span>Medication Reminder</span>
+                <small>Push to parent device</small>
+              </div>
+              <label class="toggle on">
+                <input type="checkbox" checked/><span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="sf-toggle-row">
+              <div class="sf-toggle-info">
+                <span>Geofence Departure Alert</span>
+                <small>Alert when leaving home zone</small>
+              </div>
+              <label class="toggle on">
+                <input type="checkbox" checked/><span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="sf-toggle-row">
+              <div class="sf-toggle-info">
+                <span>Nightly Sleep Report</span>
+                <small>7 AM daily summary email</small>
+              </div>
+              <label class="toggle">
+                <input type="checkbox"/><span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="sf-toggle-row">
+              <div class="sf-toggle-info">
+                <span>Quiet Hours (10 PM – 7 AM)</span>
+                <small>Only critical alerts during quiet hours</small>
+              </div>
+              <label class="toggle on">
+                <input type="checkbox" checked/><span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device / sensor info -->
+        <div class="panel settings-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="wifi"></i> Sensors &amp; Devices</span>
+          </div>
+          <div class="device-list">
+            <div class="dev-item">
+              <div class="dev-icon"><i data-lucide="radio"></i></div>
+              <div class="dev-info">
+                <span>ESP32 CSI Node — Living Room</span>
+                <small>FW v2.4.1 · Signal: Excellent</small>
+              </div>
+              <span class="dev-status ok">Online</span>
+            </div>
+            <div class="dev-item">
+              <div class="dev-icon"><i data-lucide="radio"></i></div>
+              <div class="dev-info">
+                <span>ESP32 CSI Node — Bedroom</span>
+                <small>FW v2.4.1 · Signal: Good</small>
+              </div>
+              <span class="dev-status ok">Online</span>
+            </div>
+            <div class="dev-item">
+              <div class="dev-icon"><i data-lucide="radio"></i></div>
+              <div class="dev-info">
+                <span>ESP32 CSI Node — Bathroom</span>
+                <small>FW v2.4.0 · Update available</small>
+              </div>
+              <span class="dev-status warn">Update</span>
+            </div>
+            <div class="dev-item">
+              <div class="dev-icon"><i data-lucide="watch"></i></div>
+              <div class="dev-info">
+                <span>Wrist Band — Margaret's Watch</span>
+                <small>Battery: 73% · BLE connected</small>
+              </div>
+              <span class="dev-status ok">Online</span>
+            </div>
+          </div>
+          <button class="settings-action-btn"><i data-lucide="refresh-cw"></i> Scan for new devices</button>
+        </div>
+
+        <!-- Profile -->
+        <div class="panel settings-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i data-lucide="user-cog"></i> Parent Profile</span>
+          </div>
+          <div class="settings-form">
+            <div class="sf-group">
+              <label>Name</label>
+              <input type="text" class="sf-input" value="Margaret Chen" />
+            </div>
+            <div class="sf-group">
+              <label>Date of Birth</label>
+              <input type="date" class="sf-input" value="1943-04-12" />
+            </div>
+            <div class="sf-group">
+              <label>Known Conditions</label>
+              <input type="text" class="sf-input" value="Hypertension, Type 2 Diabetes" />
+            </div>
+            <div class="sf-group">
+              <label>GP / Doctor</label>
+              <input type="text" class="sf-input" value="Dr. Rebecca Lau" />
+            </div>
+            <button class="settings-action-btn primary"><i data-lucide="save"></i> Save Profile</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════
+     SOS MODAL
+═══════════════════════════════ -->
+<div class="modal-overlay" id="sos-modal" style="display:none">
+  <div class="modal sos-modal">
+    <div class="sos-header">
+      <i data-lucide="phone-call" style="color:#FF4757;width:40px;height:40px"></i>
+      <h2>Emergency SOS</h2>
+    </div>
+    <p>Who do you want to contact for <strong>Margaret Chen</strong>?</p>
+    <div class="sos-contacts">
+      <button class="sos-contact-btn primary">
+        <i data-lucide="phone-call"></i>
+        <div><strong>Sarah Chen (You)</strong><small>+1 (555) 234-5678</small></div>
+      </button>
+      <button class="sos-contact-btn">
+        <i data-lucide="phone"></i>
+        <div><strong>Michael Chen</strong><small>+1 (555) 345-6789</small></div>
+      </button>
+      <button class="sos-contact-btn danger">
+        <i data-lucide="ambulance"></i>
+        <div><strong>Emergency Services</strong><small>911 — Ambulance</small></div>
+      </button>
+      <button class="sos-contact-btn">
+        <i data-lucide="stethoscope"></i>
+        <div><strong>Dr. Rebecca Lau</strong><small>+1 (555) 456-7890</small></div>
+      </button>
+    </div>
+    <button class="modal-close-btn" id="sos-close">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     ALERT TOAST CONTAINER
+═══════════════════════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
